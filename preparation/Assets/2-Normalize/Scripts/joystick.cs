@@ -5,44 +5,45 @@ using UnityEngine;
 public class joystick : MonoBehaviour
 {
     [SerializeField] float limitePos;
-    private bool move;
+    [SerializeField] float moveSpeed;
+
+    private bool isMove;
+
     private Vector3 mousePos;
-    private Vector3 beforePos;
-    private RectTransform rectTransform;
+    private Vector3 originPos;
+
+    [SerializeField] GameObject player;
     void Start()
     {
-        rectTransform = GetComponent<RectTransform>();
-        beforePos = transform.position;
+        originPos = transform.position;
     }
 
     void Update()
     {
-        if(move == true)
+        if(isMove == true)
         {
             MoveJoyCon();
             if (Input.GetMouseButtonUp(0)) 
             {
-                move = false;
-                transform.position = beforePos;    
+                isMove = false;
+                transform.position = originPos;    
             }
         }
     }
     private void MoveJoyCon()
     {
         mousePos = Input.mousePosition;
-        rectTransform.position = Camera.main.ScreenToWorldPoint(mousePos);
+        transform.position = Camera.main.ScreenToWorldPoint(mousePos);
         transform.localPosition = new Vector3(
             Mathf.Clamp(transform.localPosition.x, -limitePos, limitePos),
             Mathf.Clamp(transform.localPosition.y, -limitePos, limitePos),
-            0
-            );
-        Debug.Log(transform.localPosition.x);
+            0);
+
+        player.transform.position += transform.localPosition.normalized * Time.deltaTime * moveSpeed;
     }
     private void OnMouseOver()
     {
         if(Input.GetMouseButtonDown(0))
-        {
-            move = true;
-        }
+            isMove = true;
     }
 }
