@@ -31,4 +31,13 @@ public class test : MonoBehaviour
 
         return Vector2.Lerp(abbc, bccd, t);
     }
+    void BezierCurveRotate(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float t)
+    {
+        Vector2 movePos = BezierCurve(a, b, c, d, t);
+        Vector2 nextPos = BezierCurve(a, b, c, d, t + Time.deltaTime);
+
+        Vector2 dir = nextPos - movePos;
+        float z = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0, 0, z);
+    } 
 }
