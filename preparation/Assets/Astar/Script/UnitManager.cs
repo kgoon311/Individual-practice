@@ -102,10 +102,19 @@ public class UnitManager : MonoBehaviour
             Vector2 vec = curNode.nodeIdx + pos[i]; //가장 작은 노드부터 주변 노드 탐색
 
             //범위에 넘어가는지 예외처리
-            if (vec.x > 0 || vec.x < arrayCount_x || vec.y > 0 || vec.y < arrayCount_y)
-                OpenNode(GetNode(vec), i);
+            if (vec.x < 0 || vec.x >= arrayCount_x || vec.y < 0 || vec.y >= arrayCount_y)
+                continue;
+
+            OpenNode(GetNode(vec), i);
         }
         openNode.Remove(curNode);
+
+        if (isEnd)
+        {
+            endNode.beforeNode = curNode;
+            LinkNode();
+            return;
+        }
 
         UnitScript lowUnit = openNode[0];
         foreach (UnitScript unit in openNode)
@@ -113,14 +122,6 @@ public class UnitManager : MonoBehaviour
                 lowUnit = unit;
 
         curNode = lowUnit;
-        if (curNode.type == UnitType.End)
-        {
-            curNode.type = UnitType.CloseNode;
-            endNode.beforeNode = curNode;
-            LinkNode();
-            return;
-        }
-
         curNode.type = UnitType.CloseNode;
         Invoke("StartAstar", 0.3f);
     }
@@ -128,13 +129,19 @@ public class UnitManager : MonoBehaviour
     {
         if (node == null)
             return;
+        else if (node.type == UnitType.End) 
+        {
+            isEnd = true;
+            return;
+        }
         else if (node.type != UnitType.Unit)//일반 Unit이 아닐시 리턴
             return;
 
         openNode.Add(node);
         node.beforeNode = curNode;
         node.f_g = node.beforeNode.f_g + cost[idx];
-        node.f_h = Mathf.Abs(endNode.nodeIdx.x - node.nodeIdx.x) + Mathf.Abs(endNode.nodeIdx.y - node.nodeIdx.y);
+        node.f_h = Mathf.Abs(endNode.nodeIdx.x - node.nodeIdx.x)*10 + 
+                   Mathf.Abs(endNode.nodeIdx.y - node.nodeIdx.y)*10;
         node.f_f = node.f_g + node.f_h;
         node.type = UnitType.OpenNode;
     }
