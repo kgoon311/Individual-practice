@@ -7,21 +7,26 @@ using UnityEngine.UI;
 public enum UnitType
 { 
     Unit,
-    Node,
-    OpenNode,
     Wall,
     Start,
-    End
+    End,
+    OpenNode,
+    CloseNode,
+    Road
 }
 
 public class UnitScript : MonoBehaviour
 {
     public UnitType type = UnitType.Unit;
 
-    [SerializeField] private SpriteRenderer image;
+    public SpriteRenderer image;
     [SerializeField] private TextMesh gTxt,hTxt,fTxt;
     public float f_g,f_h,f_f;
-
+    public Vector2 nodeIdx;
+    public UnitScript beforeNode;
+    private void Awake()
+    {
+    }
     void Update()
     {
         gTxt.text = f_g.ToString();
@@ -34,9 +39,14 @@ public class UnitScript : MonoBehaviour
                     image.color = Color.white;
                     break;
                 }
-            case UnitType.Node:
+            case UnitType.OpenNode:
                 {
                     image.color = Color.yellow;
+                    break;
+                }
+            case UnitType.CloseNode:
+                {
+                    image.color = Color.gray;
                     break;
                 }
             case UnitType.Wall:
@@ -52,6 +62,11 @@ public class UnitScript : MonoBehaviour
             case UnitType.End:
                 {
                     image.color = Color.blue;
+                    break;
+                }
+            case UnitType.Road:
+                {
+                    image.color = Color.green;
                     break;
                 }
         }
