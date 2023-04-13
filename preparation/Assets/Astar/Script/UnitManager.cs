@@ -1,33 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Security.Cryptography;
-using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.XR;
 
 public class UnitManager : MonoBehaviour
 {
     public static UnitManager Instance;
 
     [SerializeField] private UnitScript unitBase;
-    [SerializeField] private UnitScript[,] unitArray;
+    private UnitScript[,] unitArray;
 
-    [SerializeField] private List<UnitScript> openNode;
-    [SerializeField] private List<UnitScript> closeNode;
+    private List<UnitScript> openNode;
 
     private UnitScript curNode;
-    [SerializeField] private UnitScript startNode;
-    [SerializeField] private UnitScript endNode;
+    private UnitScript startNode;
+    private UnitScript endNode;
 
+    //주변 노드를 탐색할 때 사용됩니다.
     private Vector2[] pos = {new Vector2(-1, 1), new Vector2(0, 1), new Vector2(1, 1),
                              new Vector2(-1, 0),                     new Vector2(1, 0),
                              new Vector2(-1, -1),new Vector2(0, -1), new Vector2(1, -1) };
-    private int[] cost = { 14, 10, 14, 10, 10, 14, 10, 14 };
+
+    private int[] cost = { 14, 10, 14, 10, 10, 14, 10, 14 };//일반 이동 : 10 , 대각 이동 : 14
     [SerializeField] private int arrayCount_x;
     [SerializeField] private int arrayCount_y;
-    private int setIdx;
+
+    private int setIdx;//노드를 설정할때 사용됩니다
     private bool isStart;
     private bool isEnd;
     private void Awake()
@@ -38,7 +35,6 @@ public class UnitManager : MonoBehaviour
     {
         unitArray = new UnitScript[arrayCount_x, arrayCount_y];
         openNode = new List<UnitScript>();
-        closeNode = new List<UnitScript>();
         for (int i = 0; i < arrayCount_x; i++)
         {
             for (int j = 0; j < arrayCount_y; j++)
@@ -99,16 +95,19 @@ public class UnitManager : MonoBehaviour
     {
         for (int i = 0; i < 8; i++)
         {
-            Vector2 vec = curNode.nodeIdx + pos[i]; //가장 작은 노드부터 주변 노드 탐색
+            //가장 F가 작은 노드부터 주변 노드 탐색
+            Vector2 vec = curNode.nodeIdx + pos[i]; 
 
             //범위에 넘어가는지 예외처리
             if (vec.x < 0 || vec.x >= arrayCount_x || vec.y < 0 || vec.y >= arrayCount_y)
                 continue;
 
+            //주변 노드 오픈
             OpenNode(GetNode(vec), i);
         }
         openNode.Remove(curNode);
 
+        //주변 노드에 End노드가 있을 시 종료 후 시작지점과 연결
         if (isEnd)
         {
             endNode.beforeNode = curNode;
@@ -116,6 +115,7 @@ public class UnitManager : MonoBehaviour
             return;
         }
 
+        //노드중 F가 적은 노드탐색
         UnitScript lowUnit = openNode[0];
         foreach (UnitScript unit in openNode)
             if (lowUnit.f_f > unit.f_f)
@@ -129,7 +129,7 @@ public class UnitManager : MonoBehaviour
     {
         if (node == null)
             return;
-        else if (node.type == UnitType.End) 
+        else if (node.type == UnitType.End) //열린 노드가 End Node일 경우 종료
         {
             isEnd = true;
             return;
@@ -139,9 +139,12 @@ public class UnitManager : MonoBehaviour
 
         openNode.Add(node);
         node.beforeNode = curNode;
+        //이동까지 걸리는 코스트 더하기
         node.f_g = node.beforeNode.f_g + cost[idx];
+        //END지점까지 예외 없이 대략적인 거리
         node.f_h = Mathf.Abs(endNode.nodeIdx.x - node.nodeIdx.x)*10 + 
                    Mathf.Abs(endNode.nodeIdx.y - node.nodeIdx.y)*10;
+
         node.f_f = node.f_g + node.f_h;
         node.type = UnitType.OpenNode;
     }
@@ -149,6 +152,7 @@ public class UnitManager : MonoBehaviour
     {
         if (endNode.beforeNode == startNode)
             return;
+
         endNode = endNode.beforeNode;
         endNode.type = UnitType.Road;
         Invoke("LinkNode", 0.5f);
